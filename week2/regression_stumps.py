@@ -37,8 +37,11 @@ class RegressionStump():
     
     def fit(self, data, targets):
         """ Fit a decision stump to data
+<<<<<<< HEAD
+=======
         
         Find the best way to split the data, minimizing the least squares loss of the tree after the split 
+>>>>>>> 7f0b8a80c00ee266bcfec19c6038009170e77fd9
     
         Args:
            data: np.array (n, d)  features
@@ -52,6 +55,21 @@ class RegressionStump():
         self.left = None
         self.right = None
         ### YOUR CODE HERE
+        rows = data.shape[0]
+        columns = data.shape[1]
+        oldbest = None
+        for i in range (rows):
+            for j in range (columns):
+                self.idx = j
+                self.val = data[i][j]
+                self.left = np.mean(targets[data[:,j] < self.val])
+                self.right = np.mean(targets[data[:,j] >= self.val])
+                if (oldbest == None or self.score(data, targets) < oldbest):
+                    oldbest = self.score(data, targets)
+                    self.idx = j
+                    self.val = data[i][j]
+                    self.left = np.mean(targets[data[:,j] < self.val])
+                    self.right = np.mean(targets[data[:,j] >= self.val])
         ### END CODE
 
     def predict(self, X):
@@ -63,6 +81,9 @@ class RegressionStump():
         returns pred: np.array shape n,  model prediction on X
         """
         pred = None
+        dataset = X[:, self.idx] # Alle rækker i X på kolonne self.idx
+        decision = (dataset < self.val) # vektor med 1 og 0
+        pred = decision * self.left + (1-decision) * self.right # vektor med forudsigelser: self.left eller self.right
         ### YOUR CODE HERE
         ### END CODE
         return pred
@@ -77,6 +98,8 @@ class RegressionStump():
         returns out: scalar - mean least squares loss.
         """
         out = None
+        pred = self.predict(X) # Vores forudsigelser på X
+        out = ((pred-y)**2).mean # Gennemsnit af kvadratet af forskellen mellem pred og y
         ### YOUR CODE HERE
         ### END CODE
         return out
