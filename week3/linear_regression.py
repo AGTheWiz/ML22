@@ -29,6 +29,8 @@ class LinearRegressor():
         """
         newX = X.copy()
         ### YOUR CODE HERE 1-3 lines
+        ones = np.ones(newX.shape[0], 1)
+        newX = np.concatenate((ones,newX),axis=1)
         ### END CODE
         return newX
     
@@ -47,8 +49,8 @@ class LinearRegressor():
         Computes and stores w: numpy array shape (d,) the best weight vector w to linearly approximate the target from the features.
 
         """  
-        w = np.zeros(X.shape[1]+1)
-        newX = self.hardcode_bias(X)
+        w = np.linalg.pinv(X)@y
+        
         ### YOUR CODE HERE 1-3 lines
         ### END CODE
         self.w =  w
@@ -61,8 +63,10 @@ class LinearRegressor():
           pred (numpy array,  shape(n,))
         """
         pred = None
-        newX = self.hardcode_bias(X)
+        w = np.linalg.pinv(X)@y
+        pred = X@w
         ### YOUR CODE HERE 1-2 lines
+
         ### END CODE
         return pred
 
