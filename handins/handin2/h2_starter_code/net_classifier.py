@@ -125,7 +125,7 @@ class NetClassifier():
         return acc
     
     @staticmethod
-    def cost_grad(X, y, params, c=0.1):
+    def cost_grad(X, y, params, c=0.0):
         """ Compute cost and gradient of neural net on data X with labels y using weight decay parameter c
         You should implement a forward pass and store the intermediate results 
         and then implement the backwards pass using the intermediate stored results
@@ -156,11 +156,12 @@ class NetClassifier():
         labels = one_in_k_encoding(y, W2.shape[1]) # shape n x k
                         
         ### YOUR CODE HERE - FORWARD PASS - compute cost with weight decay and store relevant values for backprop
-        xWithB1 = np.append(b1, X, axis=1) # shape n x (d+1): Add bias to X (as first column)
-        z1 = xWithB1 @ W1 # shape n x h (h = size of hidden layer)
-        a1 = relu(z1) # shape n x h
-        xWithB2 = np.append(b2, a1, axis=1) # shape n x (h+1): Add bias to a1 (as first column)
-        z2 = xWithB2 @ W2 # shape n x k (k = number of classes)
+        z1 = X @ W1 # shape n x h (h = size of hidden layer)
+        res1 = z1 + b1
+        res1prime = relu(res1) # shape n x h
+        z2 = X @ W2 # shape n x k (k = number of classes)
+        res2 = z2 + b2
+        res2prime = softmax(res2) # shape n x k
         a2 = softmax(z2) # shape n x k 
         ### END CODE - FORWARD PASS
         
