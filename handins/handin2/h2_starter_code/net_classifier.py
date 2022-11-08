@@ -121,6 +121,8 @@ class NetClassifier():
             params = self.params
         acc = None
         ### YOUR CODE HERE
+
+
         ### END CODE
         return acc
     
@@ -219,6 +221,19 @@ class NetClassifier():
 
         
         ### YOUR CODE HERE
+        # Mini batch fra Logistic Regression
+        for i in range(epochs):
+            ### Permute data
+            perm = np.random.permutation(X.shape[0])
+            X = X[perm]
+            y = y[perm]
+            for j in range(0,X.shape[0],batch_size):
+                cost, grad = self.cost_grad(X[j:j+batch_size],y[j:j+batch_size],w)
+                w = w - lr*grad
+                hist['train_loss'] = (cost)
+                hist['train_acc'] = (self.predict(X_train, y_train, w))
+                hist['val_loss'] = (self.predict(X_val, y_val, w))
+                hist['val_acc'] = (self.predict(X_val, y_val, w))
         ### END CODE
         # hist dict should look like this with something different than none
         #hist = {'train_loss': None, 'train_acc': None, 'val_loss': None, 'val_acc': None}
