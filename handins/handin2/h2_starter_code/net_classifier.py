@@ -162,6 +162,8 @@ class NetClassifier():
         DaB = Crelu @ W2 # shape n x k (k = number of classes)
         Esum = DaB + b2
         Fsoft = softmax(Esum) # shape n x k
+
+        crossEntropyLoss = -np.sum(labels * np.log(Fsoft)) # shape 1 x 1
         ### END CODE - FORWARD PASS
         
         ### YOUR CODE HERE - BACKWARDS PASS - compute derivatives of all weights and bias, store them in d_w1, d_w2, d_b1, d_b2
@@ -180,7 +182,7 @@ class NetClassifier():
         d_w1 = X.T @ dGdA
         ### END CODE - BACKWARDS PASS
         # the return signature
-        return None, {'d_w1': None, 'd_w2': None, 'd_b1': None, 'd_b2': None}
+        return crossEntropyLoss, {'d_w1': d_w1, 'd_w2': d_w2, 'd_b1': d_b1, 'd_b2': d_b2}
         
     def fit(self, X_train, y_train, X_val, y_val, init_params, batch_size=32, lr=0.1, c=1e-4, epochs=30):
         """ Run Mini-Batch Gradient Descent on data X, Y to minimize the in sample error for Neural Net classification
