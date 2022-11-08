@@ -55,7 +55,7 @@ def relu(x):
         Beware of np.max and look at np.maximum
     """
     ### YOUR CODE HERE
-    res = np.max(0, x)
+    res = np.maximum(0, x)
     ### END CODE
     return res
 
@@ -156,17 +156,20 @@ class NetClassifier():
         labels = one_in_k_encoding(y, W2.shape[1]) # shape n x k
                         
         ### YOUR CODE HERE - FORWARD PASS - compute cost with weight decay and store relevant values for backprop
-        z1 = X @ W1 # shape n x h (h = size of hidden layer)
-        res1 = z1 + b1
-        res1prime = relu(res1) # shape n x h
-        z2 = X @ W2 # shape n x k (k = number of classes)
-        res2 = z2 + b2
-        res2prime = softmax(res2) # shape n x k
-        a2 = softmax(z2) # shape n x k 
+        AaB = X @ W1 # shape n x h (h = size of hidden layer)
+        Bsum = AaB + b1
+        Crelu = relu(Bsum) # shape n x h
+        DaB = Crelu @ W2 # shape n x k (k = number of classes)
+        Esum = DaB + b2
+        Fsoft = softmax(Esum) # shape n x k
         ### END CODE - FORWARD PASS
         
         ### YOUR CODE HERE - BACKWARDS PASS - compute derivatives of all weights and bias, store them in d_w1, d_w2, d_b1, d_b2
         
+        # Row-wise subtraction of one-hot encoding of the labels from the softmax output
+        dSoftmaxdEsum = Fsoft - labels # shape n x k
+        
+
         ### END CODE - BACKWARDS PASS
         # the return signature
         return None, {'d_w1': None, 'd_w2': None, 'd_b1': None, 'd_b2': None}
