@@ -167,9 +167,17 @@ class NetClassifier():
         ### YOUR CODE HERE - BACKWARDS PASS - compute derivatives of all weights and bias, store them in d_w1, d_w2, d_b1, d_b2
         
         # Row-wise subtraction of one-hot encoding of the labels from the softmax output
-        dSoftmaxdEsum = Fsoft - labels # shape n x k
-        
-
+        dSoftmax = Fsoft - labels # shape n x k (also called: dG/dF since we introduce G as the identity function on top of F)
+        dGdE = dSoftmax
+        d_b2 = dGdE * 1 
+        dGdD = dGdE * 1
+        dGdC = dGdD @ W2.T
+        d_w2 = Crelu.T @ dGdD
+        dGdB = dGdC * (Bsum > 0)
+        d_b1 = dGdB * 1 
+        dGdA = dGdB * 1
+        dGdX = dGdA @ W1.T
+        d_w1 = X.T @ dGdA
         ### END CODE - BACKWARDS PASS
         # the return signature
         return None, {'d_w1': None, 'd_w2': None, 'd_b1': None, 'd_b2': None}
