@@ -101,17 +101,22 @@ class NetClassifier():
             params = self.params
         pred = None
         ### YOUR CODE HERE
-        AaB = X @ params['W1']  # shape n x h (h = size of hidden layer)
-        Bsum = AaB + params['b1']
+        W1 = params['W1']
+        W2 = params['W2']
+        b1 = params['b1']
+        b2 = params['b2']
+
+        AaB = X @ W1  # shape n x h (h = size of hidden layer)
+        Bsum = AaB + b1
         Crelu = relu(Bsum)  # shape n x h
 
-        DaB = Crelu @ params['W2']  # shape n x k (k = number of classes)
-        Esum = DaB + params['b2']
+        DaB = Crelu @ W2  # shape n x k (k = number of classes)
+        Esum = DaB + b2
         pred = softmax(Esum)
 
         ### END CODE
         return pred
-     
+    
     def score(self, X, y, params=None):
         """ Compute accuracy of model on data X with labels y (mean 0-1 loss)
         
@@ -121,14 +126,15 @@ class NetClassifier():
             params: dict of params to use (if none use stored params)
 
         Returns:
-            np.array shape n, 1
+            a number: 1x1.
         """
         if params is None:
             params = self.params
         acc = None
         ### YOUR CODE HERE
-        pred = self.predict(self, X, params)
-        acc = np.mean(pred == y)
+        pred = self.predict(X, params)
+        count_nonzero = np.count_nonzero(np.argmax(pred, axis=1) == y)
+        acc = count_nonzero / y.shape[0]
         ### END CODE
         return acc
     
@@ -225,10 +231,10 @@ class NetClassifier():
         W2 = init_params['W2']
         b2 = init_params['b2']
         hist = {
-            'train_loss': None,
-            'train_acc': None,
-            'val_loss': None,
-            'val_acc': None, 
+            'train_loss': [],
+            'train_acc': [],
+            'val_loss': [],
+            'val_acc': [], 
         }
 
         
@@ -236,19 +242,19 @@ class NetClassifier():
         # Mini batch fra Logistic Regression
         for i in range(epochs):
             ### Permute data
-            perm = np.random.permutation(X.shape[0])
-            X = X[perm]
-            y = y[perm]
-            for j in range(0,X.shape[0],batch_size):
+            perm = np.random.permutation(X_train.shape[0])
+            X = X_train[perm]
+            y = y_train[perm]
+            for j in range(0,X_train.shape[0],batch_size):
                 cost, grad = self.cost_grad(X[j:j+batch_size],y[j:j+batch_size],{'W1':W1,'W2':W2,'b1':b1,'b2':b2},c)
                 W1 = W1 - lr * grad['d_w1']
                 W2 = W2 - lr * grad['d_w2']
                 b1 = b1 - lr * grad['d_b1']
                 b2 = b2 - lr * grad['d_b2']
-            hist['train_loss'][i] = cost
-            hist['train_acc'][i] = self.score(X_train,y_train)
-            hist['val_loss'][i] = self.cost_grad(X_val,y_val,{'W1':W1,'W2':W2,'b1':b1,'b2':b2},c)[0]
-            hist['val_acc'][i] = self.score(X_val,y_val)
+            hist['train_loss'].append(cost)
+            hist['train_acc'].append(self.score(X_train,y_train, {'W1':W1,'W2':W2,'b1':b1,'b2':b2}))
+            hist['val_loss'].append(self.cost_grad(X_val,y_val,{'W1':W1,'W2':W2,'b1':b1,'b2':b2},c)[0])
+            hist['val_acc'].append(self.score(X_val,y_val, {'W1':W1,'W2':W2,'b1':b1,'b2':b2}))
             print("Epoch: ", i, "Train loss: ", hist['train_loss'][i], "Train acc: ", hist['train_acc'][i], "Val loss: ", hist['val_loss'][i], "Val acc: ", hist['val_acc'][i])
         
         self.params = {'W1': W1, 'W2': W2, 'b1': b1, 'b2': b2}
