@@ -165,7 +165,8 @@ class NetClassifier():
         Esum = DaB + b2
         Fsoft = softmax(Esum) # shape n x k
 
-        crossEntropyLoss = -np.sum(labels * np.log(Fsoft)) # shape 1 x 1
+
+        cost = -np.sum(labels * np.log(Fsoft)) + c * (np.sum(W1**2) + np.sum(W2**2)) # Måske del første led med "/ X.shape[0]"
         ### END CODE - FORWARD PASS
         
         ### YOUR CODE HERE - BACKWARDS PASS - compute derivatives of all weights and bias, store them in d_w1, d_w2, d_b1, d_b2
@@ -184,7 +185,7 @@ class NetClassifier():
         d_w1 = X.T @ dGdA
         ### END CODE - BACKWARDS PASS
         # the return signature
-        return crossEntropyLoss, {'d_w1': d_w1, 'd_w2': d_w2, 'd_b1': d_b1, 'd_b2': d_b2}
+        return cost, {'d_w1': d_w1, 'd_w2': d_w2, 'd_b1': d_b1, 'd_b2': d_b2}
         
     def fit(self, X_train, y_train, X_val, y_val, init_params, batch_size=32, lr=0.1, c=1e-4, epochs=30):
         """ Run Mini-Batch Gradient Descent on data X, Y to minimize the in sample error for Neural Net classification
@@ -228,12 +229,15 @@ class NetClassifier():
             X = X[perm]
             y = y[perm]
             for j in range(0,X.shape[0],batch_size):
-                cost, grad = self.cost_grad(X[j:j+batch_size],y[j:j+batch_size],w)
-                w = w - lr*grad
+                cost, grad = self.cost_grad(X[j:j+batch_size],y[j:j+batch_size],{'W1':W1,'W2':W2,'b1':b1,'b2':b2},c)
+                W1 = W1 - lr * grad['d_w1']
+                W2 = W2 - lr * grad['d_w2']
+                b1 = b1 - lr * grad['d_b1']
+                b2 = b2 - lr * grad['d_b2']
                 hist['train_loss'] = (cost)
-                hist['train_acc'] = (self.predict(X_train, y_train, w))
-                hist['val_loss'] = (self.predict(X_val, y_val, w))
-                hist['val_acc'] = (self.predict(X_val, y_val, w))
+                hist['train_acc'] = (self.predict(X_train, y_train, {'W1':W1,'W2':W2,'b1':b1,'b2':b2}))
+                hist['val_loss'] = (self.predict(X_val, y_val, {'W1':W1,'W2':W2,'b1':b1,'b2':b2}))
+                hist['val_acc'] = (self.predict(X_val, y_val, {'W1':W1,'W2':W2,'b1':b1,'b2':b2}))
         ### END CODE
         # hist dict should look like this with something different than none
         #hist = {'train_loss': None, 'train_acc': None, 'val_loss': None, 'val_acc': None}
