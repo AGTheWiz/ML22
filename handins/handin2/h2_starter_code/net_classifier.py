@@ -101,7 +101,13 @@ class NetClassifier():
             params = self.params
         pred = None
         ### YOUR CODE HERE
+        AaB = X @ params['W1']  # shape n x h (h = size of hidden layer)
+        Bsum = AaB + params['b1']
+        Crelu = relu(Bsum)  # shape n x h
 
+        DaB = Crelu @ params['W2']  # shape n x k (k = number of classes)
+        Esum = DaB + params['b2']
+        pred = softmax(Esum)
 
         ### END CODE
         return pred
@@ -121,8 +127,8 @@ class NetClassifier():
             params = self.params
         acc = None
         ### YOUR CODE HERE
-
-
+        pred = self.predict(self, X, params)
+        acc = np.mean(pred == y)
         ### END CODE
         return acc
     
@@ -166,7 +172,9 @@ class NetClassifier():
         Fsoft = softmax(Esum) # shape n x k
 
 
-        cost = -np.sum(labels * np.log(Fsoft)) + c * (np.sum(W1**2) + np.sum(W2**2)) # Måske del første led med "/ X.shape[0]"
+        cost = -np.sum(labels * np.log(Fsoft)) / X.shape[0] + c * (np.sum(W1**2) + np.sum(W2**2)) 
+
+
         ### END CODE - FORWARD PASS
         
         ### YOUR CODE HERE - BACKWARDS PASS - compute derivatives of all weights and bias, store them in d_w1, d_w2, d_b1, d_b2
@@ -177,12 +185,15 @@ class NetClassifier():
         d_b2 = dGdE * 1 
         dGdD = dGdE * 1
         dGdC = dGdD @ W2.T
-        d_w2 = Crelu.T @ dGdD
+        d_w2 = Crelu.T @ dGdD / X.shape[0] + 2 * c * W2
         dGdB = dGdC * (Bsum > 0)
         d_b1 = dGdB * 1 
         dGdA = dGdB * 1
         dGdX = dGdA @ W1.T
-        d_w1 = X.T @ dGdA
+        d_w1 = X.T @ dGdA / X.shape[0] + 2 * c * W1
+
+        d_b1 = np.sum(d_b1, axis=0, keepdims=True) / X.shape[0]
+        d_b2 = np.sum(d_b2, axis=0, keepdims=True) / X.shape[0]
         ### END CODE - BACKWARDS PASS
         # the return signature
         return cost, {'d_w1': d_w1, 'd_w2': d_w2, 'd_b1': d_b1, 'd_b2': d_b2}
@@ -234,10 +245,15 @@ class NetClassifier():
                 W2 = W2 - lr * grad['d_w2']
                 b1 = b1 - lr * grad['d_b1']
                 b2 = b2 - lr * grad['d_b2']
-                hist['train_loss'] = (cost)
-                hist['train_acc'] = (self.predict(X_train, y_train, {'W1':W1,'W2':W2,'b1':b1,'b2':b2}))
-                hist['val_loss'] = (self.predict(X_val, y_val, {'W1':W1,'W2':W2,'b1':b1,'b2':b2}))
-                hist['val_acc'] = (self.predict(X_val, y_val, {'W1':W1,'W2':W2,'b1':b1,'b2':b2}))
+            hist['train_loss'][i] = cost
+            hist['train_acc'][i] = self.score(X_train,y_train)
+            hist['val_loss'][i] = self.cost_grad(X_val,y_val,{'W1':W1,'W2':W2,'b1':b1,'b2':b2},c)[0]
+            hist['val_acc'][i] = self.score(X_val,y_val)
+            print("Epoch: ", i, "Train loss: ", hist['train_loss'][i], "Train acc: ", hist['train_acc'][i], "Val loss: ", hist['val_loss'][i], "Val acc: ", hist['val_acc'][i])
+        
+        self.params = {'W1': W1, 'W2': W2, 'b1': b1, 'b2': b2}
+
+        
         ### END CODE
         # hist dict should look like this with something different than none
         #hist = {'train_loss': None, 'train_acc': None, 'val_loss': None, 'val_acc': None}
